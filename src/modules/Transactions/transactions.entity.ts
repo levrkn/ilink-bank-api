@@ -1,18 +1,20 @@
+import { Field, ObjectType } from '@nestjs/graphql'
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
-import { WalletEntity } from '../Wallets/wallets.entity'
+import { Wallet } from '../Wallets/wallets.entity'
 
 @Entity('transactions')
-export class TransactionEntity {
+@ObjectType()
+export class Transaction {
     @PrimaryGeneratedColumn('uuid')
+    @Field()
     id: string
 
     @Column()
+    @Field()
     money: number
 
-    @ManyToOne(() => WalletEntity, (wallet) => wallet.transactions)
-    from: WalletEntity
-
-    @ManyToOne(() => WalletEntity, (wallet) => wallet.transactions)
-    to: WalletEntity
+    @ManyToOne(() => Wallet, (wallet) => wallet.transactions)
+    @Field(() => Wallet, { nullable: true })
+    wallet: Wallet
 }

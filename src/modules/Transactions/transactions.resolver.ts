@@ -1,22 +1,21 @@
 import { Args, Query, Resolver } from '@nestjs/graphql'
 
-import { TransactionEntity } from './transactions.entity'
-import { TransactionModel } from './transactions.model'
+import { Transaction } from './transactions.entity'
 import { TransactionsService } from './transactions.service'
 
-@Resolver(() => [TransactionModel])
+@Resolver(() => [Transaction])
 export class TransactionsResolver {
     constructor(private readonly _transactionsService: TransactionsService) {}
 
-    @Query(() => [TransactionModel], { name: 'transactions' })
-    async transactions(): Promise<TransactionEntity[]> {
+    @Query(() => [Transaction], { name: 'transactions' })
+    async transactions(): Promise<Transaction[]> {
         return await this._transactionsService.getAllTransactions()
     }
 
-    @Query(() => TransactionModel, { name: 'transaction' })
+    @Query(() => Transaction, { name: 'transaction' })
     async transaction(
         @Args('id') id: string,
-    ): Promise<TransactionEntity | undefined> {
+    ): Promise<Transaction | undefined> {
         return await this._transactionsService.findTransaction(id)
     }
 }

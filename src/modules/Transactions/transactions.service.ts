@@ -2,32 +2,33 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
-import { TransactionEntity } from './transactions.entity'
+import { Wallet } from '../Wallets/wallets.entity'
+
+import { Transaction } from './transactions.entity'
 
 @Injectable()
 export class TransactionsService {
     constructor(
-        @InjectRepository(TransactionEntity)
-        private readonly _transactionRepository: Repository<TransactionEntity>,
+        @InjectRepository(Transaction)
+        private readonly _transactionRepository: Repository<Transaction>,
     ) {}
 
-    async createTransaction(args: {
-        money: TransactionEntity['money']
-        from: TransactionEntity['from']
-        to: TransactionEntity['to']
-    }): Promise<TransactionEntity> {
+    async createTransaction(
+        wallet: Wallet,
+        money: number,
+    ): Promise<Transaction> {
         return await this._transactionRepository.save(
-            this._transactionRepository.create({ ...args }),
+            this._transactionRepository.create({ wallet, money }),
         )
     }
 
-    async getAllTransactions(): Promise<TransactionEntity[]> {
+    async getAllTransactions(): Promise<Transaction[]> {
         return await this._transactionRepository.find().then((data) => data)
     }
 
     async findTransaction(
-        id: TransactionEntity['id'],
-    ): Promise<TransactionEntity | undefined> {
+        id: Transaction['id'],
+    ): Promise<Transaction | undefined> {
         return await this._transactionRepository
             .findOne({ where: { id } })
             .then((data) => data)

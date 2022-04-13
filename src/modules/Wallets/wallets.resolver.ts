@@ -1,27 +1,31 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 
-import { WalletEntity } from './wallets.entity'
-import { WalletModel } from './wallets.model'
+import { Transaction } from '../Transactions/transactions.entity'
+
+import { DepositInput, Wallet } from './wallets.entity'
 import { WalletsService } from './wallets.service'
 
-@Resolver(() => [WalletModel])
+@Resolver(() => [Wallet])
 export class WalletsResolver {
     constructor(private readonly _walletsService: WalletsService) {}
 
-    @Mutation(() => WalletModel, { name: 'create' })
-    async create(@Args('name') name: string): Promise<WalletEntity> {
+    @Mutation(() => Wallet, { name: 'create' })
+    async create(@Args('name') name: string): Promise<Wallet> {
         return await this._walletsService.createWallet(name)
     }
 
-    @Query(() => [WalletModel], { name: 'wallets' })
-    async wallets(): Promise<WalletEntity[]> {
+    @Query(() => [Wallet], { name: 'wallets' })
+    async wallets(): Promise<Wallet[]> {
         return await this._walletsService.getAllWallets()
     }
 
-    @Query(() => WalletModel, { name: 'wallet' })
-    async wallet(
-        @Args('name') name: string,
-    ): Promise<WalletEntity | undefined> {
+    @Query(() => Wallet, { name: 'wallet' })
+    async wallet(@Args('name') name: string): Promise<Wallet | undefined> {
         return await this._walletsService.findWallet(name)
+    }
+
+    @Mutation(() => Transaction, { name: 'deposit' })
+    async deposit(@Args('input') input: DepositInput): Promise<Transaction> {
+        return await this._walletsService.depositWallet(input)
     }
 }

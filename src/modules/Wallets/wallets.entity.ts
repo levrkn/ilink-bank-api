@@ -1,18 +1,33 @@
+import { Field, InputType, ObjectType } from '@nestjs/graphql'
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 
-import { TransactionEntity } from '../Transactions/transactions.entity'
+import { Transaction } from '../Transactions/transactions.entity'
 
 @Entity('wallets')
-export class WalletEntity {
+@ObjectType()
+export class Wallet {
     @PrimaryGeneratedColumn('uuid')
+    @Field()
     id: string
 
     @Column({ unique: true })
+    @Field()
     name: string
 
     @Column()
+    @Field()
     money: number
 
-    @OneToMany(() => TransactionEntity, (transaction) => transaction.from)
-    transactions: TransactionEntity
+    @OneToMany(() => Transaction, (transaction) => transaction.wallet)
+    @Field(() => [Transaction], { nullable: true })
+    transactions: Transaction[]
+}
+
+@InputType()
+export class DepositInput {
+    @Field()
+    money: number
+
+    @Field()
+    walletName: string
 }
