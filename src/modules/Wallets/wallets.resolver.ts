@@ -17,4 +17,11 @@ export class WalletsResolver {
     async wallets(): Promise<WalletEntity[]> {
         return await this._walletsService.getAllWallets()
     }
+
+    @Query(() => WalletModel, { name: 'wallet' })
+    async wallet(
+        @Args('name') name: string,
+    ): Promise<WalletEntity | undefined> {
+        return await this._walletsService.findWallet(name)
+    }
 }

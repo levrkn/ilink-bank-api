@@ -1,5 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql'
 
+import { TransactionEntity } from '../Transactions/transactions.entity'
+
 @ObjectType()
 export class WalletModel {
     @Field()
@@ -9,5 +11,8 @@ export class WalletModel {
     name: string
 
     @Field()
-    cash: string
+    money: number
+
+    @Field()
+    transactions: TransactionEntity[]
 }
