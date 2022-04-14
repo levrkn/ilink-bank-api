@@ -2,7 +2,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 
 import { Transaction } from '../Transactions/transactions.entity'
 
-import { DepositInput, Wallet } from './wallets.entity'
+import { OperationInput, Wallet } from './wallets.entity'
 import { WalletsService } from './wallets.service'
 
 @Resolver(() => [Wallet])
@@ -25,7 +25,24 @@ export class WalletsResolver {
     }
 
     @Mutation(() => Transaction, { name: 'deposit' })
-    async deposit(@Args('input') input: DepositInput): Promise<Transaction> {
-        return await this._walletsService.depositWallet(input)
+    async deposit(
+        @Args('input') input: OperationInput,
+    ): Promise<Transaction | null> {
+        return await this._walletsService.createOperation(input)
+    }
+
+    @Mutation(() => Transaction, { name: 'withdraw' })
+    async withdraw(
+        @Args('input') input: OperationInput,
+    ): Promise<Transaction | null> {
+        return await this._walletsService.createOperation({
+            walletName: input.walletName,
+            money: -input.money,
+        })
+    }
+
+    @Mutation(() => Boolean, { name: 'close' })
+    async close(@Args('name') name: string): Promise<boolean> {
+        return await this._walletsService.closeWallet(name)
     }
 }

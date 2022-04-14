@@ -6,7 +6,7 @@ import { Repository } from 'typeorm'
 import { Transaction } from '../Transactions/transactions.entity'
 import { TransactionsService } from '../Transactions/transactions.service'
 
-import { DepositInput, Wallet } from './wallets.entity'
+import { OperationInput, Wallet } from './wallets.entity'
 
 @Injectable()
 export class WalletsService {
@@ -18,7 +18,10 @@ export class WalletsService {
 
     async createWallet(name: Wallet['name']): Promise<Wallet> {
         return await this._walletRepository.save(
-            this._walletRepository.create({ name, money: 0 }),
+            this._walletRepository.create({
+                name,
+                money: 0,
+            }),
         )
     }
 
@@ -32,20 +35,20 @@ export class WalletsService {
             .then((data) => data)
     }
 
-    async depositWallet(input: DepositInput): Promise<Transaction> {
-        const findedWallet = (await this._walletRepository.findOne({
+    async createOperation(input: OperationInput): Promise<Transaction | null> {
+        const findedWallet = await this._walletRepository.findOne({
             where: { name: input.walletName },
-        })) as Wallet
+        })
+
+        if (!findedWallet) {
+            return null
+        }
 
         const transaction = await this._transactionsService.createTransaction(
-            findedWallet,
             input.money,
         )
-        if (findedWallet.transactions) {
-            findedWallet.transactions.push(transaction)
-        } else {
-            findedWallet.transactions = [transaction]
-        }
+
+        ;(await findedWallet.transactions).push(transaction)
 
         await this._walletRepository.save({
             ...findedWallet,
@@ -55,5 +58,19 @@ export class WalletsService {
         })
 
         return transaction
+    }
+
+    async closeWallet(name: Wallet['name']): Promise<boolean> {
+        const findedWallet = await this._walletRepository.findOne({
+            where: { name },
+        })
+
+        if (!findedWallet) {
+            return false
+        }
+
+        await this._walletRepository.softDelete(findedWallet)
+
+        return true
     }
 }

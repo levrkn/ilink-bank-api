@@ -19,12 +19,12 @@ export class Wallet {
     money: number
 
     @OneToMany(() => Transaction, (transaction) => transaction.wallet)
-    @Field(() => [Transaction], { nullable: true })
-    transactions: Transaction[]
+    @Field(() => [Transaction])
+    transactions: Promise<Transaction[]>
 }
 
 @InputType()
-export class DepositInput {
+export class OperationInput {
     @Field()
     money: number
 

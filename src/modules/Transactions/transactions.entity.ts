@@ -15,6 +15,6 @@ export class Transaction {
     money: number
 
     @ManyToOne(() => Wallet, (wallet) => wallet.transactions)
-    @Field(() => Wallet, { nullable: true })
-    wallet: Wallet
+    @Field(() => Wallet)
+    wallet: Promise<Wallet>
 }
