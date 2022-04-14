@@ -69,7 +69,7 @@ export class WalletsService {
             return false
         }
 
-        await this._walletRepository.softDelete(findedWallet)
+        this._walletRepository.softDelete(findedWallet.id)
 
         return true
     }

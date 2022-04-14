@@ -1,5 +1,13 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql'
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import {
+    Column,
+    CreateDateColumn,
+    DeleteDateColumn,
+    Entity,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm'
 
 import { Transaction } from '../Transactions/transactions.entity'
 
@@ -21,6 +29,17 @@ export class Wallet {
     @OneToMany(() => Transaction, (transaction) => transaction.wallet)
     @Field(() => [Transaction])
     transactions: Promise<Transaction[]>
+
+    @CreateDateColumn()
+    @Field()
+    createdAt: Date
+
+    @UpdateDateColumn()
+    @Field()
+    updatedAt: Date
+
+    @DeleteDateColumn()
+    deletedAt: Date
 }
 
 @InputType()
