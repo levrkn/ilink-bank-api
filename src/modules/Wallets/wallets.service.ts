@@ -1,47 +1,57 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import BigNumber from 'bignumber.js'
 import { Repository } from 'typeorm'
 
-import { Transaction } from '../Transactions/transactions.entity'
+import { TransactionEntity } from '../Transactions/entities/transaction.entity'
 import { TransactionsService } from '../Transactions/transactions.service'
 
-import { OperationInput, Wallet } from './wallets.entity'
+import { WalletEntity } from './entities/wallet.entity'
+import { OperationInputType } from './graphql/operationInput.type'
 
 @Injectable()
 export class WalletsService {
     constructor(
-        @InjectRepository(Wallet)
-        private readonly _walletRepository: Repository<Wallet>,
+        @InjectRepository(WalletEntity)
+        private readonly _walletRepository: Repository<WalletEntity>,
         private readonly _transactionsService: TransactionsService,
     ) {}
 
-    async createWallet(name: Wallet['name']): Promise<Wallet> {
+    async createWallet(): Promise<WalletEntity> {
         return await this._walletRepository.save(
             this._walletRepository.create({
-                name,
                 money: 0,
             }),
         )
     }
 
-    async getAllWallets(): Promise<Wallet[]> {
+    async getAllWallets(): Promise<WalletEntity[]> {
         return await this._walletRepository.find().then((data) => data)
     }
 
-    async findWallet(name: Wallet['name']): Promise<Wallet | undefined> {
+    async findWallet(
+        id: WalletEntity['id'],
+    ): Promise<WalletEntity | undefined> {
         return await this._walletRepository
-            .findOne({ where: { name } })
+            .findOne({ where: { id } })
             .then((data) => data)
     }
 
-    async createOperation(input: OperationInput): Promise<Transaction | null> {
+    async createOperation(
+        input: OperationInputType,
+    ): Promise<TransactionEntity | Error> {
         const findedWallet = await this._walletRepository.findOne({
-            where: { name: input.walletName },
+            where: { id: input.id },
         })
 
         if (!findedWallet) {
-            return null
+            return new NotFoundException()
+        }
+
+        const moneySum = new BigNumber(findedWallet.money).plus(input.money)
+
+        if (moneySum.lt(0)) {
+            return new Error('not enough money in the account')
         }
 
         const transaction = await this._transactionsService.createTransaction(
@@ -52,17 +62,15 @@ export class WalletsService {
 
         await this._walletRepository.save({
             ...findedWallet,
-            money: new BigNumber(findedWallet.money)
-                .plus(input.money)
-                .toNumber(),
+            money: moneySum.toNumber(),
         })
 
         return transaction
     }
 
-    async closeWallet(name: Wallet['name']): Promise<boolean> {
+    async closeWallet(id: WalletEntity['id']): Promise<boolean> {
         const findedWallet = await this._walletRepository.findOne({
-            where: { name },
+            where: { id },
         })
 
         if (!findedWallet) {

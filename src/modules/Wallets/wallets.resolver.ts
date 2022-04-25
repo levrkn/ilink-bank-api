@@ -1,48 +1,55 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 
-import { Transaction } from '../Transactions/transactions.entity'
+import { TransactionEntity } from '../Transactions/entities/transaction.entity'
+import { TransactionType } from '../Transactions/graphql/transaction.type'
 
-import { OperationInput, Wallet } from './wallets.entity'
+import { WalletEntity } from './entities/wallet.entity'
+import { OperationInputType } from './graphql/operationInput.type'
+import { WalletType } from './graphql/wallet.type'
 import { WalletsService } from './wallets.service'
 
-@Resolver(() => [Wallet])
+@Resolver(() => [WalletType])
 export class WalletsResolver {
     constructor(private readonly _walletsService: WalletsService) {}
 
-    @Mutation(() => Wallet, { name: 'create' })
-    async create(@Args('name') name: string): Promise<Wallet> {
-        return await this._walletsService.createWallet(name)
+    @Mutation(() => WalletType, { name: 'create' })
+    async create(): Promise<WalletEntity> {
+        return await this._walletsService.createWallet()
     }
 
-    @Query(() => [Wallet], { name: 'wallets' })
-    async wallets(): Promise<Wallet[]> {
+    @Query(() => [WalletType], { name: 'wallets' })
+    async wallets(): Promise<WalletEntity[]> {
         return await this._walletsService.getAllWallets()
     }
 
-    @Query(() => Wallet, { name: 'wallet' })
-    async wallet(@Args('name') name: string): Promise<Wallet | undefined> {
-        return await this._walletsService.findWallet(name)
+    @Query(() => WalletType, { name: 'wallet' })
+    async wallet(@Args('id') id: string): Promise<WalletEntity | undefined> {
+        return await this._walletsService.findWallet(id)
     }
 
-    @Mutation(() => Transaction, { name: 'deposit' })
+    @Mutation(() => TransactionType, { name: 'deposit' })
     async deposit(
-        @Args('input') input: OperationInput,
-    ): Promise<Transaction | null> {
-        return await this._walletsService.createOperation(input)
+        @Args('input') input: OperationInputType,
+    ): Promise<TransactionEntity | Error> {
+        return input.money < 0
+            ? new Error('Invalid input')
+            : await this._walletsService.createOperation(input)
     }
 
-    @Mutation(() => Transaction, { name: 'withdraw' })
+    @Mutation(() => TransactionType, { name: 'withdraw' })
     async withdraw(
-        @Args('input') input: OperationInput,
-    ): Promise<Transaction | null> {
-        return await this._walletsService.createOperation({
-            walletName: input.walletName,
-            money: -input.money,
-        })
+        @Args('input') input: OperationInputType,
+    ): Promise<TransactionEntity | Error> {
+        return input.money > 0
+            ? new Error('Invalid input')
+            : await this._walletsService.createOperation({
+                  id: input.id,
+                  money: -input.money,
+              })
     }
 
     @Mutation(() => Boolean, { name: 'close' })
-    async close(@Args('name') name: string): Promise<boolean> {
-        return await this._walletsService.closeWallet(name)
+    async close(@Args('id') id: string): Promise<boolean> {
+        return await this._walletsService.closeWallet(id)
     }
 }

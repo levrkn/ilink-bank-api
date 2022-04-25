@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
-import { Transaction } from './transactions.entity'
+import { TransactionEntity } from './entities/transaction.entity'
 
 @Injectable()
 export class TransactionsService {
     constructor(
-        @InjectRepository(Transaction)
-        private readonly _transactionRepository: Repository<Transaction>,
+        @InjectRepository(TransactionEntity)
+        private readonly _transactionRepository: Repository<TransactionEntity>,
     ) {}
 
-    async createTransaction(money: number): Promise<Transaction> {
+    async createTransaction(money: number): Promise<TransactionEntity> {
         return await this._transactionRepository.save(
             this._transactionRepository.create({
                 money,
@@ -19,15 +19,16 @@ export class TransactionsService {
         )
     }
 
-    async getAllTransactions(): Promise<Transaction[]> {
+    async getAllTransactions(): Promise<TransactionEntity[]> {
         return await this._transactionRepository.find().then((data) => data)
     }
 
     async findTransaction(
-        id: Transaction['id'],
-    ): Promise<Transaction | undefined> {
-        return await this._transactionRepository
+        id: TransactionEntity['id'],
+    ): Promise<TransactionEntity | Error> {
+        const findedTransaction = await this._transactionRepository
             .findOne({ where: { id } })
             .then((data) => data)
+        return !findedTransaction ? new NotFoundException() : findedTransaction
     }
 }

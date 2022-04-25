@@ -1,4 +1,3 @@
-import { Field, ObjectType } from '@nestjs/graphql'
 import {
     Column,
     CreateDateColumn,
@@ -8,28 +7,22 @@ import {
     UpdateDateColumn,
 } from 'typeorm'
 
-import { Wallet } from '../Wallets/wallets.entity'
+import { WalletEntity } from 'src/modules/Wallets/entities/wallet.entity'
 
 @Entity('transactions')
-@ObjectType()
-export class Transaction {
+export class TransactionEntity {
     @PrimaryGeneratedColumn('uuid')
-    @Field()
     id: string
 
     @Column()
-    @Field()
     money: number
 
-    @ManyToOne(() => Wallet, (wallet) => wallet.transactions)
-    @Field(() => Wallet)
-    wallet: Promise<Wallet>
+    @ManyToOne(() => WalletEntity, (wallet) => wallet.transactions)
+    wallet: Promise<WalletEntity>
 
     @CreateDateColumn()
-    @Field()
     createdAt: Date
 
     @UpdateDateColumn()
-    @Field()
     updatedAt: Date
 }
