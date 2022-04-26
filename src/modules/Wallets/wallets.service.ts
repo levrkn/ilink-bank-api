@@ -29,12 +29,11 @@ export class WalletsService {
         return await this._walletRepository.find().then((data) => data)
     }
 
-    async findWallet(
-        id: WalletEntity['id'],
-    ): Promise<WalletEntity | undefined> {
-        return await this._walletRepository
+    async findWallet(id: WalletEntity['id']): Promise<WalletEntity | Error> {
+        const findedWallet = await this._walletRepository
             .findOne({ where: { id } })
             .then((data) => data)
+        return !findedWallet ? new NotFoundException() : findedWallet
     }
 
     async createOperation(
