@@ -13,9 +13,11 @@ import { WalletsService } from './wallets.service'
 export class WalletsResolver {
     constructor(private readonly _walletsService: WalletsService) {}
 
-    @Mutation(() => WalletType, { name: 'create' })
-    async create(): Promise<WalletEntity> {
-        return await this._walletsService.createWallet()
+    @Mutation(() => WalletType, { name: 'createWallet' })
+    async createWallet(
+        @Args('userName') userName: string,
+    ): Promise<WalletEntity> {
+        return await this._walletsService.createWallet(userName)
     }
 
     @Query(() => [WalletType], { name: 'wallets' })

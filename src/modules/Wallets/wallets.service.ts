@@ -17,10 +17,12 @@ export class WalletsService {
         private readonly _transactionsService: TransactionsService,
     ) {}
 
-    async createWallet(): Promise<WalletEntity> {
+    async createWallet(name: string): Promise<WalletEntity> {
+        const findedUser = this._walletRepository.findOne({ where: name })
         return await this._walletRepository.save(
             this._walletRepository.create({
                 money: 0,
+                user: findedUser,
             }),
         )
     }
