@@ -82,4 +82,26 @@ export class WalletsService {
 
         return true
     }
+
+    // async transferMoney(
+    //     resenderWalletId: string,
+    //     recieverWalletId: string,
+    //     money: number,
+    // ): Promise<boolean> {
+    // const result = {
+    //     sender: this.createOperation({
+    //         id: resenderWalletId,
+    //         money: -money,
+    //     }),
+    //     reciever: this.createOperation({ id: recieverWalletId, money }),
+    // }
+
+    // if (result.sender.then((data) => data)) {
+    //     return false
+    // }
+
+    // this._walletRepository.softDelete(findedWallet.id)
+
+    //     return true
+    // }
 }

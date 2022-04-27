@@ -20,16 +20,6 @@ export class WalletsResolver {
         return await this._walletsService.createWallet(userName)
     }
 
-    @Query(() => [WalletType], { name: 'wallets' })
-    async wallets(): Promise<WalletEntity[]> {
-        return await this._walletsService.getAllWallets()
-    }
-
-    @Query(() => WalletType, { name: 'wallet' })
-    async wallet(@Args('id') id: string): Promise<WalletEntity | Error> {
-        return await this._walletsService.findWallet(id)
-    }
-
     @Mutation(() => TransactionType, { name: 'deposit' })
     async deposit(
         @Args('input') input: OperationInputType,
@@ -51,8 +41,18 @@ export class WalletsResolver {
               })
     }
 
-    @Mutation(() => Boolean, { name: 'close' })
-    async close(@Args('id') id: string): Promise<boolean> {
+    @Mutation(() => Boolean, { name: 'closeWallet' })
+    async closeWallet(@Args('id') id: string): Promise<boolean> {
         return await this._walletsService.closeWallet(id)
+    }
+
+    @Query(() => [WalletType], { name: 'wallets' })
+    async wallets(): Promise<WalletEntity[]> {
+        return await this._walletsService.getAllWallets()
+    }
+
+    @Query(() => WalletType, { name: 'wallet' })
+    async wallet(@Args('id') id: string): Promise<WalletEntity | Error> {
+        return await this._walletsService.findWallet(id)
     }
 }

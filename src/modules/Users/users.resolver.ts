@@ -16,6 +16,11 @@ export class UsersResolver {
         return await this._usersService.createUser(input)
     }
 
+    @Mutation(() => Boolean, { name: 'deleteUser' })
+    async deleteUser(@Args('id') id: string): Promise<boolean> {
+        return await this._usersService.deleteUser(id)
+    }
+
     @Query(() => [UserType], { name: 'users' })
     async users(): Promise<UserEntity[]> {
         return await this._usersService.getAllUsers()

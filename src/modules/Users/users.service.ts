@@ -28,4 +28,18 @@ export class UsersService {
             .then((data) => data)
         return !findedUser ? new NotFoundException() : findedUser
     }
+
+    async deleteUser(id: string): Promise<boolean> {
+        const findedUser = await this._userRepository.findOne({
+            where: { id },
+        })
+
+        if (!findedUser) {
+            return false
+        }
+
+        this._userRepository.softDelete(findedUser.id)
+
+        return true
+    }
 }
