@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
+import { repositoryFindOne } from 'src/lib/repositoryFindOne'
+
 import { UserEntity } from './entities/user.entity'
-import { CreateUserType } from './graphql/createUser.type'
+import { CreateUserType } from './graphql/createUser.input'
 
 @Injectable()
 export class UsersService {
@@ -22,24 +24,17 @@ export class UsersService {
         return await this._userRepository.find().then((data) => data)
     }
 
-    async findUser(name: string): Promise<UserEntity | Error> {
-        const findedUser = await this._userRepository
-            .findOne({ where: { name } })
-            .then((data) => data)
-        return !findedUser ? new NotFoundException() : findedUser
+    async findUser(name: string): Promise<UserEntity> {
+        return await repositoryFindOne(this._userRepository, {
+            where: { name },
+        })
     }
 
-    async deleteUser(id: string): Promise<boolean> {
-        const findedUser = await this._userRepository.findOne({
-            where: { id },
-        })
-
-        if (!findedUser) {
-            return false
-        }
+    async deleteUser(id: string): Promise<UserEntity> {
+        const findedUser = await repositoryFindOne(this._userRepository, id)
 
         this._userRepository.softDelete(findedUser.id)
 
-        return true
+        return findedUser
     }
 }

@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
-import BigNumber from 'bignumber.js'
+
+import { moneyValidation } from 'src/lib/moneyValidation'
 
 import { TransactionEntity } from '../Transactions/entities/transaction.entity'
 import { TransactionType } from '../Transactions/graphql/transaction.type'
@@ -23,26 +24,24 @@ export class WalletsResolver {
     @Mutation(() => TransactionType, { name: 'deposit' })
     async deposit(
         @Args('input') input: OperationInputType,
-    ): Promise<TransactionEntity | Error> {
-        return new BigNumber(input.money).lt(0)
-            ? new Error('Invalid input')
-            : await this._walletsService.createOperation(input)
+    ): Promise<TransactionEntity> {
+        moneyValidation(input.money)
+        return await this._walletsService.createOperation(input)
     }
 
     @Mutation(() => TransactionType, { name: 'withdraw' })
     async withdraw(
         @Args('input') input: OperationInputType,
-    ): Promise<TransactionEntity | Error> {
-        return new BigNumber(input.money).lt(0)
-            ? new Error('Invalid input')
-            : await this._walletsService.createOperation({
-                  id: input.id,
-                  money: -input.money,
-              })
+    ): Promise<TransactionEntity> {
+        moneyValidation(input.money)
+        return await this._walletsService.createOperation({
+            id: input.id,
+            money: -input.money,
+        })
     }
 
-    @Mutation(() => Boolean, { name: 'closeWallet' })
-    async closeWallet(@Args('id') id: string): Promise<boolean> {
+    @Mutation(() => WalletType, { name: 'closeWallet' })
+    async closeWallet(@Args('id') id: string): Promise<WalletEntity> {
         return await this._walletsService.closeWallet(id)
     }
 
@@ -52,7 +51,7 @@ export class WalletsResolver {
     }
 
     @Query(() => WalletType, { name: 'wallet' })
-    async wallet(@Args('id') id: string): Promise<WalletEntity | Error> {
+    async wallet(@Args('id') id: string): Promise<WalletEntity> {
         return await this._walletsService.findWallet(id)
     }
 }

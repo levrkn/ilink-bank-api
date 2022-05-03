@@ -24,7 +24,7 @@ export class WalletEntity {
     transactions: Promise<TransactionEntity[]>
 
     @ManyToOne(() => UserEntity, (user) => user.wallets)
-    user: Promise<WalletEntity>
+    user: UserEntity
 
     @CreateDateColumn()
     createdAt: Date

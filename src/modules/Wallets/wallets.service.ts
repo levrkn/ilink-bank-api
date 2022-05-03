@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import BigNumber from 'bignumber.js'
 import { Repository } from 'typeorm'
+
+import { moneySumming } from 'src/lib/moneySumming'
+import { repositoryFindOne } from 'src/lib/repositoryFindOne'
 
 import { TransactionEntity } from '../Transactions/entities/transaction.entity'
 import { TransactionsService } from '../Transactions/transactions.service'
+import { UsersService } from '../Users/users.service'
 
 import { WalletEntity } from './entities/wallet.entity'
 import { OperationInputType } from './graphql/operationInput.type'
@@ -15,15 +18,17 @@ export class WalletsService {
         @InjectRepository(WalletEntity)
         private readonly _walletRepository: Repository<WalletEntity>,
         private readonly _transactionsService: TransactionsService,
+        private readonly _usersService: UsersService,
     ) {}
 
     async createWallet(name: string): Promise<WalletEntity> {
-        const findedUser = this._walletRepository.findOne({ where: name })
+        const findedUser = await this._usersService.findUser(name)
+        const wallet = new WalletEntity()
+        wallet.money = 0
+        wallet.user = findedUser
+
         return await this._walletRepository.save(
-            this._walletRepository.create({
-                money: 0,
-                user: findedUser,
-            }),
+            this._walletRepository.create(wallet),
         )
     }
 
@@ -31,76 +36,44 @@ export class WalletsService {
         return await this._walletRepository.find().then((data) => data)
     }
 
-    async findWallet(id: WalletEntity['id']): Promise<WalletEntity | Error> {
-        const findedWallet = await this._walletRepository
-            .findOne({ where: { id } })
-            .then((data) => data)
-        return !findedWallet ? new NotFoundException() : findedWallet
+    async findWallet(id: WalletEntity['id']): Promise<WalletEntity> {
+        return await repositoryFindOne(this._walletRepository, id)
     }
 
     async createOperation(
         input: OperationInputType,
-    ): Promise<TransactionEntity | Error> {
-        const findedWallet = await this._walletRepository.findOne({
-            where: { id: input.id },
-        })
-
-        if (!findedWallet) {
-            return new NotFoundException()
-        }
-
-        const moneySum = new BigNumber(findedWallet.money).plus(input.money)
-
-        if (moneySum.lt(0)) {
-            return new Error('not enough money in the account')
-        }
-
-        const transaction = await this._transactionsService.createTransaction(
-            input.money,
+    ): Promise<TransactionEntity> {
+        const findedWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.id,
         )
+        findedWallet.money = moneySumming(findedWallet.money, input.money)
+        await this._walletRepository.save(findedWallet)
 
-        ;(await findedWallet.transactions).push(transaction)
-
-        await this._walletRepository.save({
-            ...findedWallet,
-            money: moneySum.toNumber(),
-        })
-
-        return transaction
+        return await this._transactionsService.createTransaction(
+            input.money,
+            findedWallet,
+        )
     }
 
-    async closeWallet(id: WalletEntity['id']): Promise<boolean> {
-        const findedWallet = await this._walletRepository.findOne({
-            where: { id },
-        })
-
-        if (!findedWallet) {
-            return false
-        }
-
+    async closeWallet(id: WalletEntity['id']): Promise<WalletEntity> {
+        const findedWallet = await repositoryFindOne(this._walletRepository, id)
         this._walletRepository.softDelete(findedWallet.id)
 
-        return true
+        return findedWallet
     }
 
     // async transferMoney(
-    //     resenderWalletId: string,
+    //     senderWalletId: string,
     //     recieverWalletId: string,
     //     money: number,
     // ): Promise<boolean> {
-    // const result = {
-    //     sender: this.createOperation({
-    //         id: resenderWalletId,
-    //         money: -money,
-    //     }),
-    //     reciever: this.createOperation({ id: recieverWalletId, money }),
-    // }
 
-    // if (result.sender.then((data) => data)) {
-    //     return false
-    // }
+    //     if (result.sender.then((data) => data)) {
+    //         return false
+    //     }
 
-    // this._walletRepository.softDelete(findedWallet.id)
+    //     this._walletRepository.softDelete(findedWallet.id)
 
     //     return true
     // }

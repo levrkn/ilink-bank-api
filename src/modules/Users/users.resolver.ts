@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 
 import { UserEntity } from './entities/user.entity'
-import { CreateUserType } from './graphql/createUser.type'
+import { CreateUserType } from './graphql/createUser.input'
 import { UserType } from './graphql/user.type'
 import { UsersService } from './users.service'
 
@@ -17,7 +17,7 @@ export class UsersResolver {
     }
 
     @Mutation(() => Boolean, { name: 'deleteUser' })
-    async deleteUser(@Args('id') id: string): Promise<boolean> {
+    async deleteUser(@Args('id') id: string): Promise<UserEntity> {
         return await this._usersService.deleteUser(id)
     }
 

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
+import { WalletEntity } from '../Wallets/entities/wallet.entity'
+
 import { TransactionEntity } from './entities/transaction.entity'
 
 @Injectable()
@@ -11,11 +13,16 @@ export class TransactionsService {
         private readonly _transactionRepository: Repository<TransactionEntity>,
     ) {}
 
-    async createTransaction(money: number): Promise<TransactionEntity> {
+    async createTransaction(
+        money: number,
+        wallet: WalletEntity,
+    ): Promise<TransactionEntity> {
+        const transaction = new TransactionEntity()
+        transaction.money = money
+        transaction.wallet = wallet
+
         return await this._transactionRepository.save(
-            this._transactionRepository.create({
-                money,
-            }),
+            this._transactionRepository.create(transaction),
         )
     }
 

@@ -17,8 +17,11 @@ export class TransactionEntity {
     @Column()
     money: number
 
+    @Column({ nullable: true })
+    fromWalletId: string
+
     @ManyToOne(() => WalletEntity, (wallet) => wallet.transactions)
-    wallet: Promise<WalletEntity>
+    wallet: WalletEntity
 
     @CreateDateColumn()
     createdAt: Date
