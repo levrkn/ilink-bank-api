@@ -62,7 +62,6 @@ describe('All resolvers', () => {
                 query: getSchema('deposit'),
             })
             .expect((res) => {
-                console.log(res.body)
                 const data = res.body.data.deposit
                 expect(data).toEqual({
                     money: 200,
