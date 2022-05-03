@@ -1,9 +1,8 @@
 import { gql } from 'apollo-server-express'
 import { DocumentNode } from 'graphql'
 
+import { SchemasType } from './getSchema'
 import { testData } from './testData'
-
-type SchemasType = 'createUser' | 'createWallet' | 'deposit'
 
 export const schemas = (): { [key in SchemasType]: DocumentNode } => ({
     createUser: gql`
@@ -23,12 +22,39 @@ export const schemas = (): { [key in SchemasType]: DocumentNode } => ({
   `,
     deposit: gql`
     mutation {
-        deposit (input: { id: "${testData.walletId}", money: 100 }) {
+        deposit (input: { id: "${testData.oneWalletId}", money: 200 }) {
             money
-            wallet {
+            recieverWallet {
                 id
                 money
-                transactions {
+                recievedTransactions {
+                    money
+                    wallet {
+                        id
+                    }
+                }
+            }
+        }
+    }
+`,
+    transfer: gql`
+    mutation {
+        transfer (input: { senderWalletId: "${testData.oneWalletId}", recieverWalletId: "${testData.twoWalletId}", money: 50 }) {
+            money
+            senderWallet {
+                id
+                money
+                sendedTransactions {
+                    money
+                }
+            }
+            recieverWallet {
+                id
+                money
+                user {
+                    email
+                }
+                recievedTransactions {
                     money
                 }
             }

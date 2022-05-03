@@ -17,11 +17,15 @@ export class TransactionEntity {
     @Column()
     money: number
 
-    @Column({ nullable: true })
-    fromWalletId: string
+    @ManyToOne(() => WalletEntity, (wallet) => wallet.sendedTransactions, {
+        nullable: true,
+    })
+    senderWallet?: WalletEntity
 
-    @ManyToOne(() => WalletEntity, (wallet) => wallet.transactions)
-    wallet: WalletEntity
+    @ManyToOne(() => WalletEntity, (wallet) => wallet.recievedTransactions, {
+        nullable: true,
+    })
+    recieverWallet?: WalletEntity
 
     @CreateDateColumn()
     createdAt: Date

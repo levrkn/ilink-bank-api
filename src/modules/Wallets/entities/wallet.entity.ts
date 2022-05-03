@@ -20,11 +20,20 @@ export class WalletEntity {
     @Column()
     money: number
 
-    @OneToMany(() => TransactionEntity, (transaction) => transaction.wallet)
-    transactions: Promise<TransactionEntity[]>
+    @OneToMany(
+        () => TransactionEntity,
+        (transaction) => transaction.senderWallet,
+    )
+    sendedTransactions: Promise<TransactionEntity[]>
+
+    @OneToMany(
+        () => TransactionEntity,
+        (transaction) => transaction.recieverWallet,
+    )
+    recievedTransactions: Promise<TransactionEntity[]>
 
     @ManyToOne(() => UserEntity, (user) => user.wallets)
-    user: UserEntity
+    user?: UserEntity
 
     @CreateDateColumn()
     createdAt: Date

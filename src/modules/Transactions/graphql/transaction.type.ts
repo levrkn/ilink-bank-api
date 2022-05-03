@@ -10,8 +10,11 @@ export class TransactionType {
     @Field()
     money: number
 
-    @Field(() => WalletType)
-    wallet: WalletType
+    @Field(() => WalletType, { nullable: true })
+    senderWallet: WalletType
+
+    @Field(() => WalletType, { nullable: true })
+    recieverWallet: WalletType
 
     @Field()
     createdAt: Date

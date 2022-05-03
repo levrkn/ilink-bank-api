@@ -14,9 +14,7 @@ export async function repositoryFindOne<T extends ObjectLiteral>(
     repository: Repository<T>,
     options: FindOneOptions<T> | string | number | Date | ObjectID | undefined,
 ): Promise<T> {
-    const findedEntity = await repository
-        .findOne(options as undefined)
-        .then((data) => data)
+    const findedEntity = await repository.findOne(options as undefined)
 
     if (!findedEntity) {
         throw new NotFoundException(

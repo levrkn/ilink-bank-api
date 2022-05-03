@@ -33,7 +33,7 @@ describe('All resolvers', () => {
                 })
             }))
 
-    it('createWallet', () =>
+    it('createOneWallet', () =>
         request(app.getHttpServer())
             .post('/graphql')
             .send({
@@ -41,7 +41,18 @@ describe('All resolvers', () => {
             })
             .expect((res) => {
                 const data = res.body.data.createWallet
-                testData.walletId = data.id
+                testData.oneWalletId = data.id
+            }))
+
+    it('createTwoWallet', () =>
+        request(app.getHttpServer())
+            .post('/graphql')
+            .send({
+                query: getSchema('createWallet'),
+            })
+            .expect((res) => {
+                const data = res.body.data.createWallet
+                testData.twoWalletId = data.id
             }))
 
     it('deposit', () =>
@@ -51,15 +62,51 @@ describe('All resolvers', () => {
                 query: getSchema('deposit'),
             })
             .expect((res) => {
+                console.log(res.body)
                 const data = res.body.data.deposit
                 expect(data).toEqual({
-                    money: 100,
-                    wallet: {
-                        id: testData.walletId,
-                        money: 100,
-                        transactions: [
+                    money: 200,
+                    recieverWallet: {
+                        id: testData.oneWalletId,
+                        money: 200,
+                        recievedTransactions: [
                             {
-                                money: 100,
+                                money: 200,
+                                wallet: { id: testData.oneWalletId },
+                            },
+                        ],
+                    },
+                })
+            }))
+
+    it('transfer', () =>
+        request(app.getHttpServer())
+            .post('/graphql')
+            .send({
+                query: getSchema('transfer'),
+            })
+            .expect((res) => {
+                const data = res.body.data.transfer
+                expect(data).toEqual({
+                    money: 50,
+                    senderWallet: {
+                        id: testData.oneWalletId,
+                        money: 150,
+                        sendedTransactions: [
+                            {
+                                money: 50,
+                            },
+                        ],
+                    },
+                    recieverWallet: {
+                        id: testData.twoWalletId,
+                        money: 50,
+                        user: {
+                            email: testData.userEmail,
+                        },
+                        recievedTransactions: [
+                            {
+                                money: 50,
                             },
                         ],
                     },

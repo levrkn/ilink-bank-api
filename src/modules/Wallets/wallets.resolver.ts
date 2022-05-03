@@ -6,7 +6,8 @@ import { TransactionEntity } from '../Transactions/entities/transaction.entity'
 import { TransactionType } from '../Transactions/graphql/transaction.type'
 
 import { WalletEntity } from './entities/wallet.entity'
-import { OperationInputType } from './graphql/operationInput.type'
+import { OperationInputType } from './graphql/operation.input'
+import { TransferMoneyType } from './graphql/transferMoney.input'
 import { WalletType } from './graphql/wallet.type'
 import { WalletsService } from './wallets.service'
 
@@ -38,6 +39,14 @@ export class WalletsResolver {
             id: input.id,
             money: -input.money,
         })
+    }
+
+    @Mutation(() => TransactionType, { name: 'transfer' })
+    async transfer(
+        @Args('input') input: TransferMoneyType,
+    ): Promise<TransactionEntity> {
+        moneyValidation(input.money)
+        return await this._walletsService.transferMoney(input)
     }
 
     @Mutation(() => WalletType, { name: 'closeWallet' })

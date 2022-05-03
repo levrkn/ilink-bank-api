@@ -12,7 +12,10 @@ export class WalletType {
     money: number
 
     @Field(() => [TransactionType])
-    transactions: TransactionType[]
+    sendedTransactions: TransactionType[]
+
+    @Field(() => [TransactionType])
+    recievedTransactions: TransactionType[]
 
     @Field(() => UserType)
     user: UserType

@@ -10,7 +10,8 @@ import { TransactionsService } from '../Transactions/transactions.service'
 import { UsersService } from '../Users/users.service'
 
 import { WalletEntity } from './entities/wallet.entity'
-import { OperationInputType } from './graphql/operationInput.type'
+import { OperationInputType } from './graphql/operation.input'
+import { TransferMoneyType } from './graphql/transferMoney.input'
 
 @Injectable()
 export class WalletsService {
@@ -27,9 +28,11 @@ export class WalletsService {
         wallet.money = 0
         wallet.user = findedUser
 
-        return await this._walletRepository.save(
+        const savedWallet = await this._walletRepository.save(
             this._walletRepository.create(wallet),
         )
+
+        return savedWallet
     }
 
     async getAllWallets(): Promise<WalletEntity[]> {
@@ -50,10 +53,9 @@ export class WalletsService {
         findedWallet.money = moneySumming(findedWallet.money, input.money)
         await this._walletRepository.save(findedWallet)
 
-        return await this._transactionsService.createTransaction(
-            input.money,
-            findedWallet,
-        )
+        return await this._transactionsService.createTransaction(input.money, {
+            reciever: findedWallet,
+        })
     }
 
     async closeWallet(id: WalletEntity['id']): Promise<WalletEntity> {
@@ -63,18 +65,29 @@ export class WalletsService {
         return findedWallet
     }
 
-    // async transferMoney(
-    //     senderWalletId: string,
-    //     recieverWalletId: string,
-    //     money: number,
-    // ): Promise<boolean> {
+    async transferMoney(input: TransferMoneyType): Promise<TransactionEntity> {
+        const findedSenderWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.senderWalletId,
+        )
+        const findedRecieverWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.recieverWalletId,
+        )
+        findedSenderWallet.money = moneySumming(
+            findedSenderWallet.money,
+            -input.money,
+        )
+        findedRecieverWallet.money = moneySumming(
+            findedRecieverWallet.money,
+            input.money,
+        )
+        await this._walletRepository.save(findedSenderWallet)
+        await this._walletRepository.save(findedRecieverWallet)
 
-    //     if (result.sender.then((data) => data)) {
-    //         return false
-    //     }
-
-    //     this._walletRepository.softDelete(findedWallet.id)
-
-    //     return true
-    // }
+        return await this._transactionsService.createTransaction(input.money, {
+            sender: findedSenderWallet,
+            reciever: findedRecieverWallet,
+        })
+    }
 }
