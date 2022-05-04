@@ -2,32 +2,40 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 
-import { Transaction } from './transactions.entity'
+import { repositoryFindOne } from 'src/lib/repositoryFindOne'
+
+import { WalletEntity } from '../Wallets/entities/wallet.entity'
+
+import { TransactionEntity } from './entities/transaction.entity'
 
 @Injectable()
 export class TransactionsService {
     constructor(
-        @InjectRepository(Transaction)
-        private readonly _transactionRepository: Repository<Transaction>,
+        @InjectRepository(TransactionEntity)
+        private readonly _transactionRepository: Repository<TransactionEntity>,
     ) {}
 
-    async createTransaction(money: number): Promise<Transaction> {
+    async createTransaction(
+        money: number,
+        wallets: { sender?: WalletEntity; reciever: WalletEntity },
+    ): Promise<TransactionEntity> {
+        const transaction = new TransactionEntity()
+        transaction.money = money
+        transaction.recieverWallet = wallets.reciever
+        transaction.senderWallet = wallets.sender
+
         return await this._transactionRepository.save(
-            this._transactionRepository.create({
-                money,
-            }),
+            this._transactionRepository.create(transaction),
         )
     }
 
-    async getAllTransactions(): Promise<Transaction[]> {
+    async getAllTransactions(): Promise<TransactionEntity[]> {
         return await this._transactionRepository.find().then((data) => data)
     }
 
     async findTransaction(
-        id: Transaction['id'],
-    ): Promise<Transaction | undefined> {
-        return await this._transactionRepository
-            .findOne({ where: { id } })
-            .then((data) => data)
+        id: TransactionEntity['id'],
+    ): Promise<TransactionEntity> {
+        return await repositoryFindOne(this._transactionRepository, id)
     }
 }

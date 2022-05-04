@@ -1,76 +1,93 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import BigNumber from 'bignumber.js'
 import { Repository } from 'typeorm'
 
-import { Transaction } from '../Transactions/transactions.entity'
-import { TransactionsService } from '../Transactions/transactions.service'
+import { moneySumming } from 'src/lib/moneySumming'
+import { repositoryFindOne } from 'src/lib/repositoryFindOne'
 
-import { OperationInput, Wallet } from './wallets.entity'
+import { TransactionEntity } from '../Transactions/entities/transaction.entity'
+import { TransactionsService } from '../Transactions/transactions.service'
+import { UsersService } from '../Users/users.service'
+
+import { WalletEntity } from './entities/wallet.entity'
+import { OperationInputType } from './graphql/operation.input'
+import { TransferMoneyType } from './graphql/transferMoney.input'
 
 @Injectable()
 export class WalletsService {
     constructor(
-        @InjectRepository(Wallet)
-        private readonly _walletRepository: Repository<Wallet>,
+        @InjectRepository(WalletEntity)
+        private readonly _walletRepository: Repository<WalletEntity>,
         private readonly _transactionsService: TransactionsService,
+        private readonly _usersService: UsersService,
     ) {}
 
-    async createWallet(name: Wallet['name']): Promise<Wallet> {
-        return await this._walletRepository.save(
-            this._walletRepository.create({
-                name,
-                money: 0,
-            }),
+    async createWallet(name: string): Promise<WalletEntity> {
+        const findedUser = await this._usersService.findUser(name)
+        const wallet = new WalletEntity()
+        wallet.money = 0
+        wallet.user = findedUser
+
+        const savedWallet = await this._walletRepository.save(
+            this._walletRepository.create(wallet),
         )
+
+        return savedWallet
     }
 
-    async getAllWallets(): Promise<Wallet[]> {
+    async getAllWallets(): Promise<WalletEntity[]> {
         return await this._walletRepository.find().then((data) => data)
     }
 
-    async findWallet(name: Wallet['name']): Promise<Wallet | undefined> {
-        return await this._walletRepository
-            .findOne({ where: { name } })
-            .then((data) => data)
+    async findWallet(id: WalletEntity['id']): Promise<WalletEntity> {
+        return await repositoryFindOne(this._walletRepository, id)
     }
 
-    async createOperation(input: OperationInput): Promise<Transaction | null> {
-        const findedWallet = await this._walletRepository.findOne({
-            where: { name: input.walletName },
-        })
-
-        if (!findedWallet) {
-            return null
-        }
-
-        const transaction = await this._transactionsService.createTransaction(
-            input.money,
+    async createOperation(
+        input: OperationInputType,
+    ): Promise<TransactionEntity> {
+        const findedWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.id,
         )
+        findedWallet.money = moneySumming(findedWallet.money, input.money)
+        await this._walletRepository.save(findedWallet)
 
-        ;(await findedWallet.transactions).push(transaction)
-
-        await this._walletRepository.save({
-            ...findedWallet,
-            money: new BigNumber(findedWallet.money)
-                .plus(input.money)
-                .toNumber(),
+        return await this._transactionsService.createTransaction(input.money, {
+            reciever: findedWallet,
         })
-
-        return transaction
     }
 
-    async closeWallet(name: Wallet['name']): Promise<boolean> {
-        const findedWallet = await this._walletRepository.findOne({
-            where: { name },
-        })
-
-        if (!findedWallet) {
-            return false
-        }
-
+    async closeWallet(id: WalletEntity['id']): Promise<WalletEntity> {
+        const findedWallet = await repositoryFindOne(this._walletRepository, id)
         this._walletRepository.softDelete(findedWallet.id)
 
-        return true
+        return findedWallet
+    }
+
+    async transferMoney(input: TransferMoneyType): Promise<TransactionEntity> {
+        const findedSenderWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.senderWalletId,
+        )
+        const findedRecieverWallet = await repositoryFindOne(
+            this._walletRepository,
+            input.recieverWalletId,
+        )
+        findedSenderWallet.money = moneySumming(
+            findedSenderWallet.money,
+            -input.money,
+        )
+        findedRecieverWallet.money = moneySumming(
+            findedRecieverWallet.money,
+            input.money,
+        )
+        await this._walletRepository.save(findedSenderWallet)
+        await this._walletRepository.save(findedRecieverWallet)
+
+        return await this._transactionsService.createTransaction(input.money, {
+            sender: findedSenderWallet,
+            reciever: findedRecieverWallet,
+        })
     }
 }
