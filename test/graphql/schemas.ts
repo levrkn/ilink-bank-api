@@ -29,7 +29,7 @@ export const schemas = (): { [key in SchemasType]: DocumentNode } => ({
                 money
                 recievedTransactions {
                     money
-                    wallet {
+                    recieverWallet {
                         id
                     }
                 }
@@ -51,9 +51,6 @@ export const schemas = (): { [key in SchemasType]: DocumentNode } => ({
             recieverWallet {
                 id
                 money
-                user {
-                    email
-                }
                 recievedTransactions {
                     money
                 }

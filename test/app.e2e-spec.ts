@@ -4,6 +4,7 @@ import * as request from 'supertest'
 
 import { AppModule } from '../src/app.module'
 
+import { getExpected } from './graphql/getExpected'
 import { getSchema } from './graphql/getSchema'
 import { testData } from './graphql/testData'
 
@@ -27,10 +28,7 @@ describe('All resolvers', () => {
             })
             .expect((res) => {
                 const data = res.body.data.createUser
-                expect(data).toEqual({
-                    name: testData.userName,
-                    email: testData.userEmail,
-                })
+                expect(data).toEqual(getExpected('user'))
             }))
 
     it('createOneWallet', () =>
@@ -63,19 +61,7 @@ describe('All resolvers', () => {
             })
             .expect((res) => {
                 const data = res.body.data.deposit
-                expect(data).toEqual({
-                    money: 200,
-                    recieverWallet: {
-                        id: testData.oneWalletId,
-                        money: 200,
-                        recievedTransactions: [
-                            {
-                                money: 200,
-                                wallet: { id: testData.oneWalletId },
-                            },
-                        ],
-                    },
-                })
+                expect(data).toEqual(getExpected('deposit'))
             }))
 
     it('transfer', () =>
@@ -86,29 +72,6 @@ describe('All resolvers', () => {
             })
             .expect((res) => {
                 const data = res.body.data.transfer
-                expect(data).toEqual({
-                    money: 50,
-                    senderWallet: {
-                        id: testData.oneWalletId,
-                        money: 150,
-                        sendedTransactions: [
-                            {
-                                money: 50,
-                            },
-                        ],
-                    },
-                    recieverWallet: {
-                        id: testData.twoWalletId,
-                        money: 50,
-                        user: {
-                            email: testData.userEmail,
-                        },
-                        recievedTransactions: [
-                            {
-                                money: 50,
-                            },
-                        ],
-                    },
-                })
+                expect(data).toEqual(getExpected('transfer'))
             }))
 })

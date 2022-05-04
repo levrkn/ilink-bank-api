@@ -46,7 +46,9 @@ export class WalletsResolver {
         @Args('input') input: TransferMoneyType,
     ): Promise<TransactionEntity> {
         moneyValidation(input.money)
-        return await this._walletsService.transferMoney(input)
+        const transfer = await this._walletsService.transferMoney(input)
+        console.log(transfer)
+        return transfer
     }
 
     @Mutation(() => WalletType, { name: 'closeWallet' })
