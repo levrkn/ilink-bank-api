@@ -15,7 +15,6 @@ const expected = (): { [key in ExpectedType]: Record<string, unknown> } => ({
             recievedTransactions: [
                 {
                     money: 200,
-                    recieverWallet: { id: testData.oneWalletId },
                 },
             ],
         },
