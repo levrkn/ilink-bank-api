@@ -47,7 +47,6 @@ export class WalletsResolver {
     ): Promise<TransactionEntity> {
         moneyValidation(input.money)
         const transfer = await this._walletsService.transferMoney(input)
-        console.log(transfer)
         return transfer
     }
 
