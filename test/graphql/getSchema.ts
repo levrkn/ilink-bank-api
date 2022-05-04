@@ -30,9 +30,6 @@ const schemas = (): { [key in SchemasType]: DocumentNode } => ({
               money
               recievedTransactions {
                   money
-                  recieverWallet {
-                      id
-                  }
               }
           }
       }
